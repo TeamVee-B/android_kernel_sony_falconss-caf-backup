@@ -166,13 +166,23 @@ if ! [ "$defconfig" == "" ]; then
 		rm -rf $zipdirout
 		mkdir $zipdirout
 		mkdir $zipdirout/wifi/
+		mkdir $zipdirout/ramdisk/
+
+		cp -r zip-creator/ramdisk/base-ramdisk/* $zipdirout/ramdisk/
+		cp -r zip-creator/ramdisk/$variant-ramdisk/* $zipdirout/ramdisk/
+
+		cd $zipdirout/ramdisk/
+		find . | cpio -o -H newc | gzip > ../../$zipdirout/tempramdisk
+		cd ../../
+
+		rm -rf $zipdirout/ramdisk/
 
 		cp -r zip-creator/binary/* $zipdirout/
 		cp drivers/staging/prima/firmware_bin/* $zipdirout/wifi/
 
 		./zip-creator/tool/mkqcdtbootimg \
 		    --kernel arch/arm/boot/zImage \
-		    --ramdisk zip-creator/ramdisk/$variant-ramdisk \
+		    --ramdisk $zipdirout/tempramdisk \
 		    --dt_dir arch/arm/boot \
 		    --cmdline "`cat zip-creator/ramdisk/cmdline`" \
 		    --base 0x00000000 \

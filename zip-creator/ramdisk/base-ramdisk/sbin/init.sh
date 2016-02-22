@@ -3,9 +3,15 @@ set +x
 _PATH="$PATH"
 export PATH=/sbin
 
+triggerledrgb() {
+busybox echo $1 > /sys/class/leds/red/brightness
+busybox echo $2 > /sys/class/leds/green/brightness
+busybox echo $3 > /sys/class/leds/blue/brightness
+}
+
 busybox cd /
-busybox date >>boot.txt
-exec >>boot.txt 2>&1
+busybox date >> boot.txt
+exec >> boot.txt 2>&1
 busybox rm /init
 
 # include device specific vars
@@ -25,16 +31,8 @@ busybox mknod -m 666 /dev/null c 1 3
 busybox mount -t proc proc /proc
 busybox mount -t sysfs sysfs /sys
 
-# check /cache/recovery/boot
-if busybox grep -q warmboot=0x77665502 /proc/cmdline ; then
-
-busybox echo "found reboot into recovery flag"  >>boot.txt
-
-else
-
-# trigger green LED
-busybox echo 255 > sys/class/leds/green/brightness
-busybox echo 0 > sys/class/leds/red/brightness
+# trigger ON green LED
+triggerledrgb 0 255 0
 
 # trigger vibration
 busybox echo 100 > /sys/class/timed_output/vibrator/enable
@@ -43,27 +41,23 @@ busybox echo 100 > /sys/class/timed_output/vibrator/enable
 busybox cat ${BOOTREC_EVENT} > /dev/keycheck&
 busybox sleep 3
 
-fi
 # android ramdisk
 load_image=/sbin/ramdisk.cpio
 
 # boot decision
-if [ -s /dev/keycheck ] || busybox grep -q warmboot=0x77665502 /proc/cmdline ; then
-
-busybox echo 'RECOVERY BOOT' >>boot.txt
-
-# recovery ramdisk
-
-# default recovery ramdisk is PhilZ 
-load_image=/sbin/ramdisk-recovery-philz.cpio
-
+if [ -s /dev/keycheck ] || busybox grep -q warmboot=0x77665502 /proc/cmdline; then
+	busybox echo 0 > /sys/module/msm_fb/parameters/align_buffer
+	busybox echo 'RECOVERY BOOT' >> boot.txt
+	# trigger ON cyan LED for recoveryboot
+	triggerledrgb 0 255 255
+	# recovery ramdisk
+	load_image=/sbin/ramdisk-recovery.cpio
 else
-	busybox echo 'ANDROID BOOT' >>boot.txt
+	busybox echo 'ANDROID BOOT' >> boot.txt
 fi
 
-# poweroff LED
-busybox echo 0 > sys/class/leds/green/brightness
-busybox echo 0 > sys/class/leds/red/brightness
+# trigger OFF LED
+triggerledrgb 0 0 0
 
 # kill the keycheck process
 busybox pkill -f "busybox cat ${BOOTREC_EVENT}"
@@ -75,6 +69,6 @@ busybox umount /proc
 busybox umount /sys
 
 busybox rm -fr /dev/*
-busybox date >>boot.txt
+busybox date >> boot.txt
 export PATH="${_PATH}"
 exec /init

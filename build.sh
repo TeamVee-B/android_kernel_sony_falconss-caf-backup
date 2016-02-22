@@ -4,6 +4,7 @@
 # Colors by Aidas Lukošius aka aidasaidas75 <aidaslukosius75@yahoo.com>
 # Toolchains by Suhail aka skyinfo <sh.skyinfo@gmail.com>
 # Rashed for the base of zip making
+# Commands for build Xperia E1 boot.img by mpersano <mpr@fzort.org>
 # And the internet for filling in else where
 
 # You need to download https://github.com/TeamVee/android_prebuilt_toolchains
@@ -19,41 +20,29 @@ bname=$name
 bvariant=$variant
 bdefconfig=$defconfig
 unset name variant defconfig
-echo "0) ${bldred}LG L5${txtrst} NFC   | E610"
-echo "1) ${bldred}LG L5${txtrst} NoNFC | E612 E617"
-echo "2) ${bldgrn}LG L7${txtrst} NFC      | P700"
-echo "3) ${bldgrn}LG L7${txtrst} NoNFC    | P705"
-echo "4) ${bldgrn}LG L7${txtrst} NFC - 8m | P708"
-echo "5) ${bldyel}LG L1 II${txtrst} Single/Dual | E410 E411 E415 E420"
-echo "6) ${bldblu}LG L3 II${txtrst} Single/Dual | E425 E430 E431 E435"
-echo "-${bldmag}WIP${txtrst}-"
-echo "7) ${bldmag}LG L7 II${txtrst} NFC   | P710 P712"
-echo "8) ${bldmag}LG L7 II${txtrst} NoNFC | P713 P714"
-echo "9) ${bldmag}LG L7 II${txtrst} Dual  | P715 P716"
+echo "${bldred}Xperia E1${txtrst}"
+echo "0) Single"
+echo "1) Dual"
+echo "2) TV"
 echo
 echo "e) Exit"
 echo
 read -p "Choice: " -n 1 -s x
 case "$x" in
-	0 ) defconfig="cyanogenmod_m4_defconfig"; name="L5"; variant="NFC";;
-	1 ) defconfig="cyanogenmod_m4_nonfc_defconfig"; name="L5"; variant="NoNFC";;
-	2 ) defconfig="cyanogenmod_u0_defconfig"; name="L7"; variant="NFC";;
-	3 ) defconfig="cyanogenmod_u0_nonfc_defconfig"; name="L7"; variant="NoNFC";;
-	4 ) defconfig="cyanogenmod_u0_8m_defconfig"; name="L7"; variant="NFC-8m";;
-	5 ) defconfig="cyanogenmod_v1_defconfig"; name="L1II"; variant="SD";;
-	6 ) defconfig="cyanogenmod_vee3_defconfig"; name="L3II"; variant="SD";;
-	7 ) defconfig="cyanogenmod_vee7_defconfig"; name="L7II"; variant="NFC";;
-	8 ) defconfig="cyanogenmod_vee7_nonfc_defconfig"; name="L7II"; variant="NoNFC";;
-	9 ) defconfig="cyanogenmod_vee7ds_defconfig"; name="L7II"; variant="Dual";;
+	0 ) variant="Single";;
+	1 ) variant="Dual";;
+	2 ) variant="TV";;
 	e ) ;;
 	* ) ops;;
 esac
-if [ "$defconfig" == "" ]; then
+if [ "$variant" == "" ]; then
 	name=$bname
 	variant=$bvariant
 	defconfig=$bdefconfig
 	unset bname bvariant bdefconfig
 else
+	defconfig="cyanogenmod_falconss_defconfig"
+	name="XperiaE1"
 	make $defconfig &> /dev/null | echo "$x - $name $variant, setting..."
 	unset buildprocesscheck zippackagecheck defconfigcheck
 fi
@@ -174,9 +163,24 @@ if ! [ "$defconfig" == "" ]; then
 		echo "$x - Ziping $customkernel"
 
 		zipdirout="zip-creator-out"
+		rm -rf $zipdirout
+		mkdir $zipdirout
+		mkdir $zipdirout/wifi/
 
-		cp -r zip-creator $zipdirout
-		cp arch/$ARCH/boot/zImage $zipdirout
+		cp -r zip-creator/binary/* $zipdirout/
+		cp drivers/staging/prima/firmware_bin/* $zipdirout/wifi/
+
+		./zip-creator/tool/mkqcdtbootimg \
+		    --kernel arch/arm/boot/zImage \
+		    --ramdisk zip-creator/ramdisk/$variant-ramdisk \
+		    --dt_dir arch/arm/boot \
+		    --cmdline "`cat zip-creator/ramdisk/cmdline`" \
+		    --base 0x00000000 \
+		    --ramdisk_offset 0x2000000 \
+		    --kernel_offset 0x10000 \
+		    --tags_offset 0x01e00000 \
+		    --pagesize 2048 \
+		    -o $zipdirout/boot.img
 
 		echo "${name}" >> $zipdirout/device.prop
 		echo "${variant}" >> $zipdirout/device.prop

@@ -3046,4 +3046,13 @@ config KRAIT_REGULATOR
 	 line from the PMIC. This supply line is powered by multiple
 	 regulators running in ganged mode inside the PMIC. Enable
 	 this option to support such configurations.
+
+config SONY_FALCON_DTB
+	depends on ARCH_MSM8610
+	default n
+	bool "Sony Xperia Falcon Device DTBs"
+	help
+	  Only include Sony Xperia Falcon to use specific DTBs, special for Xperia Falcon
+
+	  If unsure, say 'n'.
 endif

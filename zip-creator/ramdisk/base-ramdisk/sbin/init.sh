@@ -6,7 +6,7 @@ export PATH=/sbin
 triggerledrgb() {
 busybox echo $1 > /sys/class/leds/red/brightness
 busybox echo $2 > /sys/class/leds/green/brightness
-busybox echo $3 > /sys/class/leds/blue/brightness
+busybox echo $3 > /sys/class/leds/notification/brightness
 }
 
 busybox cd /

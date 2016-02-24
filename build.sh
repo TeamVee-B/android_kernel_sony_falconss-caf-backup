@@ -192,6 +192,8 @@ if ! [ "$defconfig" == "" ]; then
 		    --pagesize 2048 \
 		    -o $zipdirout/boot.img
 
+		rm -rf $zipdirout/tempramdisk
+
 		echo "${name}" >> $zipdirout/device.prop
 		echo "${variant}" >> $zipdirout/device.prop
 		echo "${release}" >> $zipdirout/device.prop

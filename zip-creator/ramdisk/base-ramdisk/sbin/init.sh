@@ -3,19 +3,20 @@ set +x
 _PATH="$PATH"
 export PATH=/sbin
 
+busybox cd /
+busybox date >> boot.txt
+exec >> boot.txt 2>&1
+busybox rm /init
+
 triggerledrgb() {
 busybox echo $1 > /sys/class/leds/red/brightness
 busybox echo $2 > /sys/class/leds/green/brightness
 busybox echo $3 > /sys/class/leds/notification/brightness
 }
 
-busybox cd /
-busybox date >> boot.txt
-exec >> boot.txt 2>&1
-busybox rm /init
-
 # include device specific vars
-source /sbin/bootrec-device
+export BOOTREC_EVENT_NODE="/dev/input/event6 c 13 70"
+export BOOTREC_EVENT="/dev/input/event6"
 
 # create directories
 busybox mkdir -m 755 -p /dev/block
@@ -24,6 +25,7 @@ busybox mkdir -m 555 -p /proc
 busybox mkdir -m 755 -p /sys
 
 # create device nodes
+busybox mknod -m 600 /dev/block/mmcblk0 b 179 0
 busybox mknod -m 600 ${BOOTREC_EVENT_NODE}
 busybox mknod -m 666 /dev/null c 1 3
 

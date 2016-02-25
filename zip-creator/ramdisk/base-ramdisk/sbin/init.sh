@@ -35,6 +35,7 @@ busybox mount -t sysfs sysfs /sys
 
 # trigger ON green LED
 triggerledrgb 0 255 0
+busybox echo "255000" > /sys/class/leds/lm3533-light-sns/rgb_brightness
 
 # trigger vibration
 busybox echo 100 > /sys/class/timed_output/vibrator/enable
@@ -52,20 +53,22 @@ if [ -s /dev/keycheck ] || busybox grep -q warmboot=0x77665502 /proc/cmdline; th
 	busybox echo 'RECOVERY BOOT' >> boot.txt
 	# trigger ON cyan LED for recoveryboot
 	triggerledrgb 0 255 255
+	busybox echo "255255255" > /sys/class/leds/lm3533-light-sns/rgb_brightness
 	# recovery ramdisk
 	load_image=/sbin/ramdisk-recovery.cpio
 else
 	busybox echo 'ANDROID BOOT' >> boot.txt
 fi
 
-# trigger OFF LED
-triggerledrgb 0 0 0
-
 # kill the keycheck process
 busybox pkill -f "busybox cat ${BOOTREC_EVENT}"
 
 # unpack the ramdisk image
 busybox cpio -i < ${load_image}
+
+# trigger OFF LED
+triggerledrgb 0 0 0
+busybox echo "0" > /sys/class/leds/lm3533-light-sns/rgb_brightness
 
 busybox umount /proc
 busybox umount /sys

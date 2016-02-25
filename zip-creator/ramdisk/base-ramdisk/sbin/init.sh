@@ -17,6 +17,8 @@ busybox echo $3 > /sys/class/leds/notification/brightness
 # include device specific vars
 export BOOTREC_EVENT_NODE="/dev/input/event6 c 13 70"
 export BOOTREC_EVENT="/dev/input/event6"
+export BOOTREC_FOTA_NODE="/dev/block/mmcblk0p16 b 179 16"
+export BOOTREC_FOTA="/dev/block/mmcblk0p16"
 
 # create directories
 busybox mkdir -m 755 -p /dev/block
@@ -55,6 +57,10 @@ if [ -s /dev/keycheck ] || busybox grep -q warmboot=0x77665502 /proc/cmdline; th
 	triggerledrgb 0 255 255
 	busybox echo "255255255" > /sys/class/leds/lm3533-light-sns/rgb_brightness
 	# recovery ramdisk
+	busybox mount -o remount,rw /
+	busybox ln -sf /sbin/busybox /sbin/sh
+	extract_elf_ramdisk -i ${BOOTREC_FOTA} -o /sbin/ramdisk-recovery.cpio -t / -c
+	busybox rm /sbin/sh
 	load_image=/sbin/ramdisk-recovery.cpio
 else
 	busybox echo 'ANDROID BOOT' >> boot.txt

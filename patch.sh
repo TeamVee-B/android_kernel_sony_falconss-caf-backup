@@ -34,6 +34,9 @@ else
 			echo
 			echo $(tput bold)$(tput setaf 1)"Something not worked good in patch #${#}"
 			echo "Aborting 'git am' process"
+			echo
+			echo "Use it to apply (dont forget to fix .rej):"
+			echo "curl $nl | git apply --reject"
 			if [ ${#} -gt "1" ]; then
 				echo
 				echo "Passing to next patch"
